@@ -46,7 +46,10 @@ int OnCalculate(const int rates_total,
                 const int &spread[])
   {
 //---
-   int    i,Counted_bars;
+   int    i,Counted_bars,indic;
+   uint tickStart;
+   int timeDiff;
+   MqlDateTime tPeriod,tPrev,tCurr;
    double prev_bar,current_bar;
    datetime prevTick,currTick;
    
@@ -57,23 +60,34 @@ int OnCalculate(const int rates_total,
    Counted_bars=IndicatorCounted(); // Количество просчитанных баров 
    i=Bars-Counted_bars-1;           // Индекс первого непосчитанного
    prevTick=iTime(Symbol(),Period(),i);
+   currTick=iTime(Symbol(),Period(),i);
    prev_bar=High[i];
    i--;
+   indic=0;
+   tickStart=GetTickCount();
    while(i>=0) {
       current_bar=High[i];
       CrossLevelBufferDown[i]=0;
       CrossLevelBufferUp[i]=0;
-      if(current_bar<=level && level<=prev_bar){
+      if(current_bar>=level && level>=prev_bar){
          CrossLevelBufferUp[i]=current_bar;
          currTick=iTime(Symbol(),Period(),i);
-         Print("Bar[",i,"] time[",iTime(Symbol(),Period(),i),"] LONG value=",current_bar," prev=",prev_bar);
+         timeDiff=currTick-prevTick;
+         Print("Bar[",i,"] time[",iTime(Symbol(),Period(),i),"] PERIOD[",timeDiff/3600.0,"] LONG value=",current_bar," prev=",prev_bar);
+         indic=1;
       }
-      if(current_bar>=level && level>=prev_bar){
+      if(current_bar<=level && level<=prev_bar){
          CrossLevelBufferDown[i]=current_bar;
          currTick=iTime(Symbol(),Period(),i);
-         Print("Bar[",i,"] time[",iTime(Symbol(),Period(),i),"] SHORT value=",current_bar," prev=",prev_bar);
+         timeDiff=currTick-prevTick;
+         Print("Bar[",i,"] time[",iTime(Symbol(),Period(),i),"] PERIOD[",timeDiff/3600.0,"] SHORT value=",current_bar," prev=",prev_bar);
+         indic=1;
+      }
+      if(indic==1){
+         indic=0;
       }
       prev_bar=current_bar;
+      prevTick=currTick;
       i--;
    }
 //--- return value of prev_calculated for next call
